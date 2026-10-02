@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 
 public interface PoliticaReembolso {
 
-    /** @throws co.edu.uniquindio.cinemauq.excepciones.CancelacionNoPermitidaException si no aplica reembolso */
     int calcularPorcentaje(Compra compra, LocalDateTime momento);
 
     String getMotivo();
