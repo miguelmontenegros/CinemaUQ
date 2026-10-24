@@ -17,6 +17,16 @@ public class Producto extends ItemConfiteria {
     }
 
     @Override
+    public long getValorSeparado() {
+        return getPrecio();
+    }
+
+    @Override
+    public int contarProductos() {
+        return 1;
+    }
+
+    @Override
     public String getDescripcion() {
         return getNombre();
     }

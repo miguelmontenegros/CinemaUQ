@@ -5,23 +5,27 @@ import co.edu.uniquindio.cinemauq.util.Validaciones;
 
 public class ItemCombo {
 
-    private final Producto producto;
+    private final ItemConfiteria componente;
     private final int cantidad;
 
-    public ItemCombo(Producto producto, int cantidad) {
-        this.producto = Validaciones.requerido(producto, "producto");
+    public ItemCombo(ItemConfiteria componente, int cantidad) {
+        this.componente = Validaciones.requerido(componente, "componente");
         if (cantidad <= 0) {
-            throw new DatoInvalidoException("La cantidad de " + producto.getNombre() + " en el combo debe ser positiva");
+            throw new DatoInvalidoException("La cantidad de " + componente.getNombre() + " en el combo debe ser positiva");
         }
         this.cantidad = cantidad;
     }
 
-    public long getValorIndividual() {
-        return producto.getPrecio() * cantidad;
+    public long getValorSeparado() {
+        return componente.getValorSeparado() * cantidad;
     }
 
-    public Producto getProducto() {
-        return producto;
+    public int contarProductos() {
+        return componente.contarProductos() * cantidad;
+    }
+
+    public ItemConfiteria getComponente() {
+        return componente;
     }
 
     public int getCantidad() {
@@ -30,6 +34,6 @@ public class ItemCombo {
 
     @Override
     public String toString() {
-        return cantidad + " x " + producto.getNombre();
+        return cantidad + " x " + componente.getDescripcion();
     }
 }
