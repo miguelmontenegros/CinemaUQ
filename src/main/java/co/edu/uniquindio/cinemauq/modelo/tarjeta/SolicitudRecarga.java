@@ -8,6 +8,8 @@ import co.edu.uniquindio.cinemauq.modelo.enums.TipoCodigo;
 import co.edu.uniquindio.cinemauq.modelo.usuarios.Administrador;
 import co.edu.uniquindio.cinemauq.modelo.usuarios.Cliente;
 
+import co.edu.uniquindio.cinemauq.util.Formatos;
+
 import java.time.LocalDateTime;
 
 public class SolicitudRecarga implements Identificable {
@@ -69,5 +71,10 @@ public class SolicitudRecarga implements Identificable {
 
     public Administrador getAtendidaPor() {
         return atendidaPor;
+    }
+
+    @Override
+    public String toString() {
+        return codigo + " - " + cliente.getNombre() + " - " + Formatos.pesos(valor) + " - " + fecha.format(Formatos.FECHA_HORA);
     }
 }
