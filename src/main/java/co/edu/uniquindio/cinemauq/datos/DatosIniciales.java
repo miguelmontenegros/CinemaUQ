@@ -128,7 +128,14 @@ public final class DatosIniciales {
         List<ItemCombo> comboNachos = new ArrayList<>();
         comboNachos.add(new ItemCombo(nachos, 1));
         comboNachos.add(new ItemCombo(gaseosa, 1));
-        confiteria.registrarItem(new Combo("K003", "Combo Nachos", 18_000, 160, comboNachos));
+        Combo nachosConGaseosa = new Combo("K003", "Combo Nachos", 18_000, 160, comboNachos);
+        confiteria.registrarItem(nachosConGaseosa);
+
+        List<ItemCombo> familiar = new ArrayList<>();
+        familiar.add(new ItemCombo(comboPareja, 2));
+        familiar.add(new ItemCombo(nachosConGaseosa, 1));
+        familiar.add(new ItemCombo(agua, 2));
+        confiteria.registrarItem(new Combo("K004", "Combo Familiar", 70_000, 620, familiar));
 
         confiteria.registrarPromocion(new Promocion("PR01", "Martes de cine", 30, AlcancePromocion.ENTRADAS,
                 hoy.minusDays(30), hoy.plusDays(180), EnumSet.of(DayOfWeek.TUESDAY)));
