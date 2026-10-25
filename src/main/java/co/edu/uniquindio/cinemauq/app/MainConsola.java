@@ -2,13 +2,19 @@ package co.edu.uniquindio.cinemauq.app;
 
 import co.edu.uniquindio.cinemauq.datos.DatosIniciales;
 import co.edu.uniquindio.cinemauq.excepciones.CinemaUQException;
+import co.edu.uniquindio.cinemauq.fachada.CinemaUQFachada;
 import co.edu.uniquindio.cinemauq.modelo.GeneradorCodigos;
 import co.edu.uniquindio.cinemauq.modelo.cartelera.Funcion;
 import co.edu.uniquindio.cinemauq.modelo.compra.Compra;
 import co.edu.uniquindio.cinemauq.modelo.compra.Entrada;
+import co.edu.uniquindio.cinemauq.modelo.compra.LineaConfiteria;
 import co.edu.uniquindio.cinemauq.modelo.compra.Promocion;
 import co.edu.uniquindio.cinemauq.modelo.compra.Reembolso;
+import co.edu.uniquindio.cinemauq.modelo.compra.adicional.DecoradorEntrada;
+import co.edu.uniquindio.cinemauq.modelo.confiteria.Combo;
+import co.edu.uniquindio.cinemauq.modelo.confiteria.ItemCombo;
 import co.edu.uniquindio.cinemauq.modelo.confiteria.ItemConfiteria;
+import co.edu.uniquindio.cinemauq.modelo.enums.AdicionalEntrada;
 import co.edu.uniquindio.cinemauq.modelo.enums.EstadoAsiento;
 import co.edu.uniquindio.cinemauq.modelo.enums.TipoCodigo;
 import co.edu.uniquindio.cinemauq.modelo.puntos.AcumulacionPuntos;
@@ -21,6 +27,7 @@ import co.edu.uniquindio.cinemauq.util.Formatos;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainConsola {
@@ -229,6 +236,77 @@ public class MainConsola {
         } catch (CinemaUQException e) {
             rechazado("Comprar en la función cancelada", e);
         }
+
+        titulo("9. COMPOSITE · combos que contienen productos y otros combos");
+        Combo familiar = (Combo) ctx.getConfiteria().buscarItem("K004");
+        System.out.println(familiar.getDescripcion());
+        System.out.println("  Productos en total: " + familiar.contarProductos());
+        System.out.println("  Valor por separado: " + Formatos.pesos(familiar.getValorSeparado())
+                + " | Precio del combo: " + Formatos.pesos(familiar.getPrecio())
+                + " | Ahorro: " + Formatos.pesos(familiar.getAhorro()));
+        for (ItemCombo parte : familiar.getContenido()) {
+            System.out.println("  - " + parte.getCantidad() + " x " + parte.getComponente().getNombre()
+                    + " (" + parte.getComponente().contarProductos() + " producto(s) c/u, valor separado "
+                    + Formatos.pesos(parte.getValorSeparado()) + ")");
+        }
+
+        titulo("10. DECORATOR · adicionales sobre las entradas");
+        Compra conAdicionales = ctx.getCompras().nuevaCompra(laura).paraFuncion(plantilla)
+                .conAsiento("H3")
+                .conAsiento("H4")
+                .conAdicional(AdicionalEntrada.GAFAS_3D)
+                .conAdicional(AdicionalEntrada.SILLA_VIBRATORIA)
+                .build();
+        for (Entrada e : conAdicionales.getEntradas()) {
+            DecoradorEntrada decorada = (DecoradorEntrada) e;
+            System.out.println("  " + e.getDescripcion() + " -> " + Formatos.pesos(e.getPrecio())
+                    + " (" + e.getClass().getSimpleName() + " envuelve a "
+                    + decorada.getEntradaDecorada().getClass().getSimpleName() + ")");
+        }
+        System.out.println("  Total entradas con adicionales: " + Formatos.pesos(conAdicionales.getSubtotalEntradas()));
+        Funcion funcion2D = ctx.getCartelera().funcionesDePelicula("P002").get(0);
+        try {
+            ctx.getCompras().nuevaCompra(laura).paraFuncion(funcion2D).conAsiento("C3")
+                    .conAdicional(AdicionalEntrada.GAFAS_3D).build();
+            permitido("Gafas 3D en una sala 2D");
+        } catch (CinemaUQException e) {
+            rechazado("Gafas 3D en una sala 2D", e);
+        }
+
+        titulo("11. PROXY · protección de las operaciones de administrador");
+        CinemaUQFachada fachada = new CinemaUQFachada(ctx);
+        fachada.iniciarSesion("laura@correo.com", "laura123");
+        try {
+            fachada.administracion().recargarTarjeta(andres, 50_000);
+            permitido("Laura (cliente) intenta recargar la tarjeta de Andrés");
+        } catch (CinemaUQException e) {
+            rechazado("Laura (cliente) intenta recargar la tarjeta de Andrés", e);
+        }
+        fachada.iniciarSesion("admin@cinemauq.co", "admin123");
+        long saldoAndres = andres.getTarjeta().getSaldo();
+        fachada.administracion().recargarTarjeta(andres, 50_000);
+        System.out.println("  El administrador recarga $50.000 a Andrés: " + Formatos.pesos(saldoAndres) + " -> "
+                + Formatos.pesos(andres.getTarjeta().getSaldo()));
+        System.out.println("  Bitácora del proxy:");
+        for (String registro : fachada.consultarBitacora()) {
+            System.out.println("    " + registro);
+        }
+
+        titulo("12. FACADE · el cliente compra usando solo CinemaUQFachada");
+        fachada.iniciarSesion("andres@correo.com", "andres123");
+        System.out.println("  Funciones en cartelera: " + fachada.consultarCartelera().size()
+                + " | Productos en confitería: " + fachada.consultarConfiteria().size());
+        long saldoAntesFachada = fachada.consultarTarjeta().getSaldo();
+        List<String> asientos = new ArrayList<>();
+        asientos.add("I7");
+        List<LineaConfiteria> confiteria = new ArrayList<>();
+        confiteria.add(new LineaConfiteria(ctx.getConfiteria().buscarItem("K001"), 1, false));
+        List<AdicionalEntrada> adicionales = new ArrayList<>();
+        Compra compraFachada = fachada.prepararCompra(plantilla, asientos, false, confiteria, null, adicionales);
+        fachada.pagarCompra(compraFachada);
+        System.out.println("  Compra " + compraFachada.getCodigo() + " por " + Formatos.pesos(compraFachada.getTotal())
+                + " | Saldo: " + Formatos.pesos(saldoAntesFachada) + " -> " + Formatos.pesos(fachada.consultarTarjeta().getSaldo())
+                + " | Movimientos: " + fachada.consultarMovimientos().size());
 
         System.out.println();
         System.out.println("Fin de la demostración.");

@@ -9,34 +9,47 @@ import java.util.List;
 
 public class Combo extends ItemConfiteria {
 
-    private final List<ItemCombo> contenido;
+    private final List<ItemCombo> contenido = new ArrayList<>();
 
     public Combo(String codigo, String nombre, long precio, int costoPuntos, List<ItemCombo> contenido) {
         super(codigo, nombre, precio, costoPuntos);
-        if (contenido == null) {
+        if (contenido == null || contenido.isEmpty()) {
             throw new DatoInvalidoException("Un combo debe tener al menos dos productos");
         }
-        int unidades = 0;
-        long valorSeparado = 0;
         for (ItemCombo item : contenido) {
-            unidades = unidades + item.getCantidad();
-            valorSeparado = valorSeparado + item.getValorIndividual();
+            if (item.getComponente() == this) {
+                throw new DatoInvalidoException("Un combo no puede contenerse a sí mismo");
+            }
+            this.contenido.add(item);
         }
-        if (unidades < 2) {
+        if (contarProductos() < 2) {
             throw new DatoInvalidoException("Un combo debe tener al menos dos productos");
         }
-        if (precio >= valorSeparado) {
-            throw new DatoInvalidoException("El precio del combo debe ser menor que " + valorSeparado);
+        if (precio >= getValorSeparado()) {
+            throw new DatoInvalidoException("El precio del combo debe ser menor que " + getValorSeparado());
         }
-        this.contenido = new ArrayList<>(contenido);
+    }
+
+    @Override
+    public long getValorSeparado() {
+        long total = 0;
+        for (ItemCombo item : contenido) {
+            total = total + item.getValorSeparado();
+        }
+        return total;
+    }
+
+    @Override
+    public int contarProductos() {
+        int total = 0;
+        for (ItemCombo item : contenido) {
+            total = total + item.contarProductos();
+        }
+        return total;
     }
 
     public long getAhorro() {
-        long valorSeparado = 0;
-        for (ItemCombo item : contenido) {
-            valorSeparado = valorSeparado + item.getValorIndividual();
-        }
-        return valorSeparado - getPrecio();
+        return getValorSeparado() - getPrecio();
     }
 
     public List<ItemCombo> getContenido() {

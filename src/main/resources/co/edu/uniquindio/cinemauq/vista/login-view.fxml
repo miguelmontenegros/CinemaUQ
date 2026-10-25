@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="co.edu.uniquindio.cinemauq.controlador.LoginControlador"
+      styleClass="fondo" spacing="10" alignment="TOP_CENTER">
+    <padding>
+        <Insets top="30" right="60" bottom="30" left="60"/>
+    </padding>
+
+    <Label text="CinemaUQ" styleClass="titulo"/>
+    <Label text="Iniciar sesión" styleClass="subtitulo"/>
+    <TextField fx:id="txtCorreo" promptText="Correo"/>
+    <PasswordField fx:id="txtContrasena" promptText="Contraseña" onAction="#iniciarSesion"/>
+    <Button text="Ingresar" onAction="#iniciarSesion" styleClass="boton-principal" maxWidth="Infinity"/>
+
+    <Separator/>
+
+    <Label text="Registrarse como cliente" styleClass="subtitulo"/>
+    <TextField fx:id="txtRegCedula" promptText="Cédula"/>
+    <TextField fx:id="txtRegNombre" promptText="Nombre completo"/>
+    <TextField fx:id="txtRegCorreo" promptText="Correo"/>
+    <PasswordField fx:id="txtRegContrasena" promptText="Contraseña (mínimo 6 caracteres)"/>
+    <Button text="Registrarme" onAction="#registrarse" maxWidth="Infinity"/>
+</VBox>

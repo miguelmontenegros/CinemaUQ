@@ -3,6 +3,7 @@ package co.edu.uniquindio.cinemauq.modelo.confiteria;
 import co.edu.uniquindio.cinemauq.modelo.contratos.Identificable;
 import co.edu.uniquindio.cinemauq.modelo.contratos.Redimible;
 import co.edu.uniquindio.cinemauq.modelo.contratos.Vendible;
+import co.edu.uniquindio.cinemauq.util.Formatos;
 import co.edu.uniquindio.cinemauq.util.Validaciones;
 
 
@@ -20,6 +21,10 @@ public abstract class ItemConfiteria implements Vendible, Redimible, Identificab
         this.precio = Validaciones.positivo(precio, "precio");
         this.costoPuntos = (int) Validaciones.positivo(costoPuntos, "costo en puntos");
     }
+
+    public abstract long getValorSeparado();
+
+    public abstract int contarProductos();
 
     @Override
     public String getIdentificador() {
@@ -58,6 +63,6 @@ public abstract class ItemConfiteria implements Vendible, Redimible, Identificab
 
     @Override
     public String toString() {
-        return nombre;
+        return nombre + " - " + Formatos.pesos(precio) + " - " + costoPuntos + " pts";
     }
 }

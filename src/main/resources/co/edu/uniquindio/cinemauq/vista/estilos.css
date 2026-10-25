@@ -1,0 +1,79 @@
+.fondo {
+    -fx-background-color: #f4f4f4;
+    -fx-font-size: 13px;
+}
+
+.titulo {
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1f3c68;
+}
+
+.subtitulo {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.dato {
+    -fx-font-weight: bold;
+}
+
+.cabecera {
+    -fx-background-color: #1f3c68;
+}
+
+.cabecera .label {
+    -fx-text-fill: white;
+}
+
+.titulo-cabecera {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.boton-principal {
+    -fx-background-color: #1f3c68;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.pantalla {
+    -fx-background-color: #3a3a3a;
+    -fx-text-fill: white;
+    -fx-alignment: center;
+    -fx-padding: 4;
+}
+
+.asiento {
+    -fx-background-color: #4caf50;
+    -fx-text-fill: white;
+    -fx-font-size: 10px;
+    -fx-min-width: 40px;
+    -fx-background-radius: 6 6 2 2;
+}
+
+.asiento-preferencial {
+    -fx-border-color: #e0a800;
+    -fx-border-width: 2;
+    -fx-border-radius: 6 6 2 2;
+}
+
+.asiento-seleccionado {
+    -fx-background-color: #1e63c4;
+}
+
+.asiento-vendido {
+    -fx-background-color: #9e9e9e;
+}
+
+.asiento-bloqueado {
+    -fx-background-color: #333333;
+}
+
+.asiento:disabled {
+    -fx-opacity: 1;
+}
+
+.leyenda {
+    -fx-padding: 3 8 3 8;
+}

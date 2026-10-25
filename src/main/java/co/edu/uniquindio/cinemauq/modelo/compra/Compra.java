@@ -6,10 +6,13 @@ import co.edu.uniquindio.cinemauq.excepciones.ReembolsoDuplicadoException;
 import co.edu.uniquindio.cinemauq.modelo.GeneradorCodigos;
 import co.edu.uniquindio.cinemauq.modelo.cartelera.Asiento;
 import co.edu.uniquindio.cinemauq.modelo.cartelera.Funcion;
+import co.edu.uniquindio.cinemauq.modelo.compra.adicional.EntradaConGafas3D;
+import co.edu.uniquindio.cinemauq.modelo.compra.adicional.EntradaConSillaVibratoria;
 import co.edu.uniquindio.cinemauq.modelo.compra.emision.CatalogoEmisores;
 import co.edu.uniquindio.cinemauq.modelo.compra.emision.EmisorEntradas;
 import co.edu.uniquindio.cinemauq.modelo.confiteria.ItemConfiteria;
 import co.edu.uniquindio.cinemauq.modelo.contratos.Identificable;
+import co.edu.uniquindio.cinemauq.modelo.enums.AdicionalEntrada;
 import co.edu.uniquindio.cinemauq.modelo.enums.EstadoCompra;
 import co.edu.uniquindio.cinemauq.modelo.enums.TipoCodigo;
 import co.edu.uniquindio.cinemauq.modelo.tarjeta.TarjetaVirtual;
@@ -182,6 +185,7 @@ public class Compra implements Identificable {
         private final List<String> asientosRedimidos = new ArrayList<>();
         private final List<LineaConfiteria> lineas = new ArrayList<>();
         private Promocion promocion;
+        private final List<AdicionalEntrada> adicionales = new ArrayList<>();
 
         public Builder conCliente(Cliente cliente) {
             this.cliente = cliente;
@@ -220,6 +224,13 @@ public class Compra implements Identificable {
 
         public Builder conPromocion(Promocion promocion) {
             this.promocion = promocion;
+            return this;
+        }
+
+        public Builder conAdicional(AdicionalEntrada adicional) {
+            if (adicional != null) {
+                adicionales.add(adicional);
+            }
             return this;
         }
 
@@ -263,6 +274,20 @@ public class Compra implements Identificable {
             if (promocion != null && !promocion.estaVigente(fecha)) {
                 throw new CompraInvalidaException("La promoción " + promocion.getNombre() + " no está vigente (RN-14)");
             }
+            List<AdicionalEntrada> sinRepetirAdicionales = new ArrayList<>();
+            for (AdicionalEntrada adicional : adicionales) {
+                if (sinRepetirAdicionales.contains(adicional)) {
+                    throw new CompraInvalidaException("El adicional " + adicional.getNombre() + " se agregó dos veces (RN-24)");
+                }
+                if (!adicional.permitidoEn(funcion.getSala().getTipo())) {
+                    throw new CompraInvalidaException("El adicional " + adicional.getNombre() + " no está disponible en salas "
+                            + funcion.getSala().getTipo().getEtiqueta() + " (RN-23)");
+                }
+                sinRepetirAdicionales.add(adicional);
+            }
+            if (!adicionales.isEmpty() && totalEntradas == 0) {
+                throw new CompraInvalidaException("Los adicionales solo se pueden agregar a entradas");
+            }
 
             for (String codigo : sinRepetir) {
                 funcion.getAsiento(codigo).validarDisponible();
@@ -278,7 +303,23 @@ public class Compra implements Identificable {
                 Asiento asiento = funcion.getAsiento(codigo).getAsiento();
                 entradas.add(CatalogoEmisores.cortesia().emitir(funcion, asiento));
             }
-            return new Compra(this, entradas);
+
+            List<Entrada> entradasFinales = new ArrayList<>();
+            for (Entrada entrada : entradas) {
+                Entrada decorada = entrada;
+                for (AdicionalEntrada adicional : adicionales) {
+                    decorada = decorar(decorada, adicional);
+                }
+                entradasFinales.add(decorada);
+            }
+            return new Compra(this, entradasFinales);
+        }
+
+        private Entrada decorar(Entrada entrada, AdicionalEntrada adicional) {
+            if (adicional == AdicionalEntrada.GAFAS_3D) {
+                return new EntradaConGafas3D(entrada);
+            }
+            return new EntradaConSillaVibratoria(entrada);
         }
     }
 }
