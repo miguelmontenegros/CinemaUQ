@@ -27,4 +27,10 @@ public class ReembolsoPorAnticipacion implements PoliticaReembolso {
     public String getMotivo() {
         return "Cancelación solicitada por el cliente";
     }
+
+    @Override
+    public String getDescripcion() {
+        return "Cancelación del cliente: 100 % con más de 24 horas de anticipación, 80 % entre 2 y 24 horas, "
+                + "no se permite con menos de 2 horas. Los puntos ganados en la compra se anulan.";
+    }
 }

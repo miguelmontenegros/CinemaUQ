@@ -11,6 +11,10 @@ public interface PoliticaReembolso {
 
     String getMotivo();
 
+    default String getDescripcion() {
+        return getMotivo();
+    }
+
     default boolean devuelvePuntosRedimidos() {
         return false;
     }

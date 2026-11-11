@@ -17,6 +17,11 @@ public class ReembolsoFuncionCancelada implements PoliticaReembolso {
     }
 
     @Override
+    public String getDescripcion() {
+        return "Función cancelada por el cine: 100 % del valor pagado y devolución de los puntos redimidos.";
+    }
+
+    @Override
     public boolean devuelvePuntosRedimidos() {
         return true;
     }
