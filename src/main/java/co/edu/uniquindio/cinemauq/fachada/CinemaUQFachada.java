@@ -19,7 +19,13 @@ import co.edu.uniquindio.cinemauq.servicio.administracion.ProxyServicioAdministr
 import co.edu.uniquindio.cinemauq.servicio.administracion.ServicioAdministracion;
 import co.edu.uniquindio.cinemauq.servicio.administracion.ServicioAdministracionReal;
 
+import co.edu.uniquindio.cinemauq.servicio.reportes.ExportadorPdf;
+import co.edu.uniquindio.cinemauq.servicio.reportes.ExportadorReporte;
+import co.edu.uniquindio.cinemauq.servicio.reportes.ExportadorTxt;
+import co.edu.uniquindio.cinemauq.servicio.reportes.GeneradorReportes;
+
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CinemaUQFachada {
@@ -32,7 +38,7 @@ public class CinemaUQFachada {
         this.contexto = contexto;
         this.sesion = new SesionUsuario();
         ServicioAdministracion real = new ServicioAdministracionReal(contexto.getAutenticacion(), contexto.getTarjetas(),
-                contexto.getCartelera(), contexto.getCancelaciones(), sesion);
+                contexto.getCartelera(), contexto.getCancelaciones(), sesion, contexto.getReportes(), contexto.getActividad());
         this.administracion = new ProxyServicioAdministracion(real, sesion, contexto.getReloj());
     }
 
@@ -127,6 +133,37 @@ public class CinemaUQFachada {
     public int consultarPuntosDisponibles() {
         LocalDate hoy = contexto.getReloj().ahora().toLocalDate();
         return sesion.getCliente().getCuentaPuntos().getPuntosDisponibles(hoy);
+    }
+
+    public int consultarPuntosPorVencer() {
+        LocalDate hoy = contexto.getReloj().ahora().toLocalDate();
+        return sesion.getCliente().getCuentaPuntos().getPuntosPorVencer(hoy, GeneradorReportes.DIAS_ALERTA_VENCIMIENTO);
+    }
+
+    public List<String> consultarNotificaciones() {
+        List<String> notificaciones = new ArrayList<>();
+        int porVencer = consultarPuntosPorVencer();
+        if (porVencer > 0) {
+            notificaciones.add("Aviso: " + porVencer + " de sus puntos vencen en los próximos "
+                    + GeneradorReportes.DIAS_ALERTA_VENCIMIENTO + " días.");
+        }
+        notificaciones.addAll(contexto.getNotificador().notificacionesDe(sesion.getCliente()));
+        return notificaciones;
+    }
+
+    public int diasAlertaVencimiento() {
+        return GeneradorReportes.DIAS_ALERTA_VENCIMIENTO;
+    }
+
+    public String describirPoliticaCancelacion() {
+        return contexto.getCancelaciones().getPoliticaCliente().getDescripcion();
+    }
+
+    public List<ExportadorReporte> exportadoresDisponibles() {
+        List<ExportadorReporte> exportadores = new ArrayList<>();
+        exportadores.add(new ExportadorTxt());
+        exportadores.add(new ExportadorPdf());
+        return exportadores;
     }
 
     public List<AcumulacionPuntos> consultarLotesDePuntos() {

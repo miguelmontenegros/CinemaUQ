@@ -4,7 +4,12 @@ import co.edu.uniquindio.cinemauq.modelo.cartelera.Funcion;
 import co.edu.uniquindio.cinemauq.modelo.compra.Reembolso;
 import co.edu.uniquindio.cinemauq.modelo.tarjeta.SolicitudRecarga;
 import co.edu.uniquindio.cinemauq.modelo.usuarios.Cliente;
+import co.edu.uniquindio.cinemauq.servicio.reportes.ExportadorReporte;
+import co.edu.uniquindio.cinemauq.servicio.reportes.IndicadoresOperacion;
+import co.edu.uniquindio.cinemauq.servicio.reportes.Reporte;
+import co.edu.uniquindio.cinemauq.servicio.reportes.TipoReporte;
 
+import java.io.File;
 import java.util.List;
 
 public interface ServicioAdministracion {
@@ -26,4 +31,10 @@ public interface ServicioAdministracion {
     List<Funcion> listarFunciones();
 
     List<Reembolso> cancelarFuncion(Funcion funcion);
+
+    Reporte generarReporte(TipoReporte tipo);
+
+    void exportarReporte(Reporte reporte, ExportadorReporte exportador, File destino);
+
+    IndicadoresOperacion consultarIndicadores();
 }

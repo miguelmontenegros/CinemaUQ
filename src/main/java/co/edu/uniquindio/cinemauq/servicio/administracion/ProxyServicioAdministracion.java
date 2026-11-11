@@ -7,8 +7,13 @@ import co.edu.uniquindio.cinemauq.modelo.tarjeta.SolicitudRecarga;
 import co.edu.uniquindio.cinemauq.modelo.usuarios.Cliente;
 import co.edu.uniquindio.cinemauq.servicio.Reloj;
 import co.edu.uniquindio.cinemauq.servicio.SesionUsuario;
+import co.edu.uniquindio.cinemauq.servicio.reportes.ExportadorReporte;
+import co.edu.uniquindio.cinemauq.servicio.reportes.IndicadoresOperacion;
+import co.edu.uniquindio.cinemauq.servicio.reportes.Reporte;
+import co.edu.uniquindio.cinemauq.servicio.reportes.TipoReporte;
 import co.edu.uniquindio.cinemauq.util.Formatos;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -100,6 +105,27 @@ public class ProxyServicioAdministracion implements ServicioAdministracion {
         List<Reembolso> reembolsos = servicioReal.cancelarFuncion(funcion);
         registrar("canceló la función " + funcion.getCodigo() + " con " + reembolsos.size() + " reembolso(s)");
         return reembolsos;
+    }
+
+    @Override
+    public Reporte generarReporte(TipoReporte tipo) {
+        verificarAcceso("generar reportes");
+        Reporte reporte = servicioReal.generarReporte(tipo);
+        registrar("generó el reporte " + tipo.getTitulo());
+        return reporte;
+    }
+
+    @Override
+    public void exportarReporte(Reporte reporte, ExportadorReporte exportador, File destino) {
+        verificarAcceso("exportar reportes");
+        servicioReal.exportarReporte(reporte, exportador, destino);
+        registrar("exportó " + reporte.getTitulo() + " a " + destino.getName());
+    }
+
+    @Override
+    public IndicadoresOperacion consultarIndicadores() {
+        verificarAcceso("consultar estadísticas");
+        return servicioReal.consultarIndicadores();
     }
 
     public List<String> getBitacora() {
