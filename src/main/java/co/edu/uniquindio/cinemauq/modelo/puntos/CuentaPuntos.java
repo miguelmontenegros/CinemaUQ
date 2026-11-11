@@ -82,6 +82,43 @@ public class CuentaPuntos {
         return anulados;
     }
 
+    public int getPuntosVencidos(LocalDate hoy) {
+        int total = 0;
+        for (AcumulacionPuntos lote : acumulaciones) {
+            if (lote.estaVencida(hoy)) {
+                total = total + lote.getPuntosRestantes();
+            }
+        }
+        return total;
+    }
+
+    public int getPuntosPorVencer(LocalDate hoy, int dias) {
+        LocalDate limite = hoy.plusDays(dias);
+        int total = 0;
+        for (AcumulacionPuntos lote : acumulaciones) {
+            if (!lote.estaVencida(hoy) && lote.getFechaVencimiento().isBefore(limite)) {
+                total = total + lote.getPuntosRestantes();
+            }
+        }
+        return total;
+    }
+
+    public int getTotalAcumulado() {
+        int total = 0;
+        for (AcumulacionPuntos lote : acumulaciones) {
+            total = total + lote.getPuntosObtenidos();
+        }
+        return total;
+    }
+
+    public int getTotalRedimido() {
+        int total = 0;
+        for (RedencionPuntos redencion : redenciones) {
+            total = total + redencion.getPuntos();
+        }
+        return total;
+    }
+
     public List<AcumulacionPuntos> getAcumulaciones() {
         return Collections.unmodifiableList(acumulaciones);
     }
