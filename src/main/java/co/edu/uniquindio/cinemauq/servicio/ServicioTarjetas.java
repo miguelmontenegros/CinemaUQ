@@ -7,6 +7,9 @@ import co.edu.uniquindio.cinemauq.modelo.tarjeta.SolicitudRecarga;
 import co.edu.uniquindio.cinemauq.modelo.usuarios.Administrador;
 import co.edu.uniquindio.cinemauq.modelo.usuarios.Cliente;
 import co.edu.uniquindio.cinemauq.repositorio.Repositorio;
+import co.edu.uniquindio.cinemauq.servicio.eventos.EventoOperacion;
+import co.edu.uniquindio.cinemauq.servicio.eventos.PublicadorEventos;
+import co.edu.uniquindio.cinemauq.servicio.eventos.TipoEvento;
 import co.edu.uniquindio.cinemauq.util.Formatos;
 
 import java.util.ArrayList;
@@ -19,10 +22,12 @@ public class ServicioTarjetas {
 
     private final Repositorio<SolicitudRecarga> solicitudes;
     private final Reloj reloj;
+    private final PublicadorEventos eventos;
 
-    public ServicioTarjetas(Repositorio<SolicitudRecarga> solicitudes, Reloj reloj) {
+    public ServicioTarjetas(Repositorio<SolicitudRecarga> solicitudes, Reloj reloj, PublicadorEventos eventos) {
         this.solicitudes = solicitudes;
         this.reloj = reloj;
+        this.eventos = eventos;
     }
 
     public SolicitudRecarga solicitarRecarga(Cliente cliente, long valor) {
@@ -36,6 +41,7 @@ public class ServicioTarjetas {
         validarAdmin(admin);
         validarValor(valor);
         cliente.getTarjeta().recargar(valor, reloj.ahora(), "Recarga realizada por " + admin.getNombre());
+        eventos.publicar(new EventoOperacion(TipoEvento.RECARGA_REALIZADA, reloj.ahora(), valor, "Tarjeta de " + cliente.getNombre(), cliente, null));
     }
 
     public void aprobarSolicitud(Administrador admin, SolicitudRecarga solicitud) {

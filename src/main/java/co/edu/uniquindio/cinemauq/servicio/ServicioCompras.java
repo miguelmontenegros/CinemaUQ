@@ -7,6 +7,9 @@ import co.edu.uniquindio.cinemauq.modelo.puntos.CuentaPuntos;
 import co.edu.uniquindio.cinemauq.modelo.tarjeta.TarjetaVirtual;
 import co.edu.uniquindio.cinemauq.modelo.usuarios.Cliente;
 import co.edu.uniquindio.cinemauq.repositorio.Repositorio;
+import co.edu.uniquindio.cinemauq.servicio.eventos.EventoOperacion;
+import co.edu.uniquindio.cinemauq.servicio.eventos.PublicadorEventos;
+import co.edu.uniquindio.cinemauq.servicio.eventos.TipoEvento;
 import co.edu.uniquindio.cinemauq.servicio.politicas.ReglaAcumulacionPuntos;
 
 import java.time.LocalDate;
@@ -19,11 +22,14 @@ public class ServicioCompras {
     private final Repositorio<Compra> compras;
     private final ReglaAcumulacionPuntos reglaPuntos;
     private final Reloj reloj;
+    private final PublicadorEventos eventos;
 
-    public ServicioCompras(Repositorio<Compra> compras, ReglaAcumulacionPuntos reglaPuntos, Reloj reloj) {
+    public ServicioCompras(Repositorio<Compra> compras, ReglaAcumulacionPuntos reglaPuntos, Reloj reloj,
+                           PublicadorEventos eventos) {
         this.compras = compras;
         this.reglaPuntos = reglaPuntos;
         this.reloj = reloj;
+        this.eventos = eventos;
     }
 
     public Compra.Builder nuevaCompra(Cliente cliente) {
@@ -61,6 +67,8 @@ public class ServicioCompras {
         compra.confirmarPago(tarjeta, puntosGanados);
         compras.guardar(compra);
         cliente.agregarCompra(compra);
+        eventos.publicar(new EventoOperacion(TipoEvento.COMPRA_CONFIRMADA, ahora, compra.getTotal(),
+                compra.getCodigo() + " de " + cliente.getNombre() + " para " + funcion.getPelicula().getTitulo(), cliente, compra));
         return compra;
     }
 

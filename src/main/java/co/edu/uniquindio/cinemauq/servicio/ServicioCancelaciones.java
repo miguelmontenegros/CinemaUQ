@@ -13,6 +13,9 @@ import co.edu.uniquindio.cinemauq.modelo.puntos.CuentaPuntos;
 import co.edu.uniquindio.cinemauq.modelo.usuarios.Administrador;
 import co.edu.uniquindio.cinemauq.modelo.usuarios.Cliente;
 import co.edu.uniquindio.cinemauq.repositorio.Repositorio;
+import co.edu.uniquindio.cinemauq.servicio.eventos.EventoOperacion;
+import co.edu.uniquindio.cinemauq.servicio.eventos.PublicadorEventos;
+import co.edu.uniquindio.cinemauq.servicio.eventos.TipoEvento;
 import co.edu.uniquindio.cinemauq.servicio.politicas.PoliticaReembolso;
 
 import java.time.LocalDateTime;
@@ -25,13 +28,22 @@ public class ServicioCancelaciones {
     private final PoliticaReembolso politicaCliente;
     private final PoliticaReembolso politicaCine;
     private final Reloj reloj;
+    private final PublicadorEventos eventos;
 
-    public ServicioCancelaciones(Repositorio<Compra> compras, PoliticaReembolso politicaCliente,
-                                 PoliticaReembolso politicaCine, Reloj reloj) {
+    public ServicioCancelaciones(Repositorio<Compra> compras, PoliticaReembolso politicaCliente, PoliticaReembolso politicaCine, Reloj reloj, PublicadorEventos eventos) {
         this.compras = compras;
         this.politicaCliente = politicaCliente;
         this.politicaCine = politicaCine;
         this.reloj = reloj;
+        this.eventos = eventos;
+    }
+
+    public PoliticaReembolso getPoliticaCliente() {
+        return politicaCliente;
+    }
+
+    public PoliticaReembolso getPoliticaCine() {
+        return politicaCine;
     }
 
     public Reembolso cancelarCompra(Cliente solicitante, Compra compra) {
@@ -51,6 +63,9 @@ public class ServicioCancelaciones {
         if (funcion.getEstado() == EstadoFuncion.CANCELADA) {
             throw new DatoInvalidoException("La función " + funcion.getCodigo() + " ya estaba cancelada");
         }
+        if (!reloj.ahora().isBefore(funcion.getFechaHora())) {
+            throw new DatoInvalidoException("La función " + funcion.getCodigo() + " ya se realizó y no se puede cancelar");
+        }
         funcion.cancelar();
         List<Reembolso> reembolsos = new ArrayList<>();
         for (Compra compra : compras.listar()) {
@@ -58,6 +73,12 @@ public class ServicioCancelaciones {
                 reembolsos.add(reembolsar(compra, politicaCine));
             }
         }
+        long totalReembolsado = 0;
+        for (Reembolso reembolso : reembolsos) {
+            totalReembolsado = totalReembolsado + reembolso.getValor();
+        }
+        eventos.publicar(new EventoOperacion(TipoEvento.FUNCION_CANCELADA, reloj.ahora(), totalReembolsado,
+                funcion.getCodigo() + " " + funcion + " con " + reembolsos.size() + " reembolso(s)", null, null));
         return reembolsos;
     }
 
@@ -77,6 +98,9 @@ public class ServicioCancelaciones {
         if (politica.devuelvePuntosRedimidos()) {
             cuenta.acumular(compra.getPuntosRedimidos(), ahora.toLocalDate(), "Devolución " + compra.getCodigo());
         }
+        eventos.publicar(new EventoOperacion(TipoEvento.COMPRA_CANCELADA, ahora, valor,
+                compra.getCodigo() + " de " + compra.getCliente().getNombre() + " (" + porcentaje + " %, "
+                        + politica.getMotivo().toLowerCase() + ")", compra.getCliente(), compra));
         return reembolso;
     }
 }
