@@ -40,7 +40,7 @@
                     </padding>
                     <VBox spacing="8" prefWidth="320">
                         <Label text="Cartelera" styleClass="subtitulo"/>
-                        <ListView fx:id="lstFunciones" onMouseClicked="#seleccionarFuncion" VBox.vgrow="ALWAYS"/>
+                        <ListView fx:id="lstFunciones" VBox.vgrow="ALWAYS"/>
                     </VBox>
                     <VBox spacing="8" HBox.hgrow="ALWAYS" alignment="TOP_CENTER">
                         <Label fx:id="lblFuncion" wrapText="true"/>
@@ -79,7 +79,9 @@
                         <Button text="Quitar producto" onAction="#quitarProducto" maxWidth="Infinity"/>
                         <Label text="Promoción (opcional)"/>
                         <ComboBox fx:id="cmbPromocion" maxWidth="Infinity" promptText="Sin promoción"/>
-                        <Button text="Revisar y pagar" onAction="#comprar" styleClass="boton-principal" maxWidth="Infinity"/>
+                        <Label text="Resumen" styleClass="subtitulo"/>
+                        <Label fx:id="lblResumenCompra" wrapText="true" styleClass="resumen-compra" maxWidth="Infinity" minHeight="-Infinity"/>
+                        <Button fx:id="btnPagar" text="Revisar y pagar" onAction="#comprar" styleClass="boton-principal" maxWidth="Infinity"/>
                         <Button text="Limpiar" onAction="#limpiarCompra" maxWidth="Infinity"/>
                     </VBox>
                 </HBox>
@@ -122,7 +124,17 @@
                         <Insets top="12" right="12" bottom="12" left="12"/>
                     </padding>
                     <Label fx:id="lblPuntosDisponibles" styleClass="subtitulo"/>
+                    <Label fx:id="lblPuntosPorVencer" styleClass="aviso" wrapText="true"/>
                     <ListView fx:id="lstPuntos" VBox.vgrow="ALWAYS"/>
+                </VBox>
+            </Tab>
+            <Tab text="Notificaciones">
+                <VBox spacing="8">
+                    <padding>
+                        <Insets top="12" right="12" bottom="12" left="12"/>
+                    </padding>
+                    <Label text="Avisos de compras, cancelaciones, recargas y puntos" styleClass="subtitulo"/>
+                    <ListView fx:id="lstNotificaciones" VBox.vgrow="ALWAYS"/>
                 </VBox>
             </Tab>
         </TabPane>

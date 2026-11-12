@@ -1,7 +1,14 @@
 package co.edu.uniquindio.cinemauq.controlador;
 
+import co.edu.uniquindio.cinemauq.controlador.compra.BotonPagar;
+import co.edu.uniquindio.cinemauq.controlador.compra.CarritoConfiteria;
+import co.edu.uniquindio.cinemauq.controlador.compra.MapaAsientos;
+import co.edu.uniquindio.cinemauq.controlador.compra.OpcionesEntrada;
+import co.edu.uniquindio.cinemauq.controlador.compra.PantallaCompraMediador;
+import co.edu.uniquindio.cinemauq.controlador.compra.ResumenCompra;
+import co.edu.uniquindio.cinemauq.controlador.compra.SelectorFuncion;
+import co.edu.uniquindio.cinemauq.controlador.compra.SelectorPromocion;
 import co.edu.uniquindio.cinemauq.excepciones.CinemaUQException;
-import co.edu.uniquindio.cinemauq.modelo.cartelera.AsientoFuncion;
 import co.edu.uniquindio.cinemauq.modelo.cartelera.Funcion;
 import co.edu.uniquindio.cinemauq.modelo.compra.Compra;
 import co.edu.uniquindio.cinemauq.modelo.compra.Entrada;
@@ -9,15 +16,10 @@ import co.edu.uniquindio.cinemauq.modelo.compra.LineaConfiteria;
 import co.edu.uniquindio.cinemauq.modelo.compra.Promocion;
 import co.edu.uniquindio.cinemauq.modelo.compra.Reembolso;
 import co.edu.uniquindio.cinemauq.modelo.confiteria.ItemConfiteria;
-import co.edu.uniquindio.cinemauq.modelo.enums.AdicionalEntrada;
-import co.edu.uniquindio.cinemauq.modelo.enums.EstadoAsiento;
-import co.edu.uniquindio.cinemauq.modelo.enums.TipoAsiento;
 import co.edu.uniquindio.cinemauq.modelo.puntos.AcumulacionPuntos;
 import co.edu.uniquindio.cinemauq.modelo.tarjeta.Movimiento;
 import co.edu.uniquindio.cinemauq.modelo.tarjeta.TarjetaVirtual;
 import co.edu.uniquindio.cinemauq.util.Formatos;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -26,9 +28,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ClienteControlador extends ControladorBase {
 
@@ -63,6 +62,10 @@ public class ClienteControlador extends ControladorBase {
     private ListView<LineaConfiteria> lstCarrito;
     @FXML
     private ComboBox<Promocion> cmbPromocion;
+    @FXML
+    private Label lblResumenCompra;
+    @FXML
+    private Button btnPagar;
 
     @FXML
     private Label lblNumeroTarjeta;
@@ -83,103 +86,34 @@ public class ClienteControlador extends ControladorBase {
     @FXML
     private Label lblPuntosDisponibles;
     @FXML
+    private Label lblPuntosPorVencer;
+    @FXML
     private ListView<String> lstPuntos;
+    @FXML
+    private ListView<String> lstNotificaciones;
 
-    private Funcion funcionSeleccionada;
-    private final List<String> asientosSeleccionados = new ArrayList<>();
+    private CarritoConfiteria carrito;
+    private PantallaCompraMediador pantallaCompra;
 
     @Override
     protected void alCargar() {
         lblBienvenida.setText("Hola, " + fachada.getUsuarioActual().getNombre());
-        cmbProductos.getItems().setAll(fachada.consultarConfiteria());
-        txtCantidad.setText("1");
-        chkGafas3D.setText(AdicionalEntrada.GAFAS_3D.getNombre() + " (+" + Formatos.pesos(AdicionalEntrada.GAFAS_3D.getValor()) + " c/u)");
-        chkSillaVibratoria.setText(AdicionalEntrada.SILLA_VIBRATORIA.getNombre() + " (+"
-                + Formatos.pesos(AdicionalEntrada.SILLA_VIBRATORIA.getValor()) + " c/u)");
+        carrito = new CarritoConfiteria(cmbProductos, txtCantidad, chkProductoPuntos, lstCarrito);
+        pantallaCompra = new PantallaCompraMediador(fachada,
+                new SelectorFuncion(lstFunciones),
+                new MapaAsientos(gridAsientos, lblFuncion, lblSeleccion),
+                new OpcionesEntrada(chkEntradasPuntos, chkGafas3D, chkSillaVibratoria),
+                carrito,
+                new SelectorPromocion(cmbPromocion),
+                new ResumenCompra(lblResumenCompra),
+                new BotonPagar(btnPagar));
         refrescarTodo();
-    }
-
-    @FXML
-    private void seleccionarFuncion() {
-        Funcion funcion = lstFunciones.getSelectionModel().getSelectedItem();
-        if (funcion != null && funcion != funcionSeleccionada) {
-            funcionSeleccionada = funcion;
-            asientosSeleccionados.clear();
-            dibujarAsientos();
-        }
-    }
-
-    private void dibujarAsientos() {
-        gridAsientos.getChildren().clear();
-        if (funcionSeleccionada == null) {
-            lblFuncion.setText("Seleccione una función de la cartelera");
-            lblSeleccion.setText("");
-            return;
-        }
-        lblFuncion.setText(funcionSeleccionada.getPelicula().getTitulo() + " - " + funcionSeleccionada.getSala()
-                + " - " + funcionSeleccionada.getFechaHora().format(Formatos.FECHA_HORA)
-                + "   |   General " + Formatos.pesos(funcionSeleccionada.getPrecioBase()) + ", preferencial +35 %");
-        for (AsientoFuncion asientoFuncion : funcionSeleccionada.getAsientos()) {
-            String codigo = asientoFuncion.getAsiento().getCodigo();
-            Button boton = new Button(codigo);
-            boton.getStyleClass().add("asiento");
-            if (asientoFuncion.getAsiento().getTipo() == TipoAsiento.PREFERENCIAL) {
-                boton.getStyleClass().add("asiento-preferencial");
-            }
-            if (asientoFuncion.getEstado() == EstadoAsiento.VENDIDO) {
-                boton.getStyleClass().add("asiento-vendido");
-                boton.setDisable(true);
-            } else if (asientoFuncion.getEstado() == EstadoAsiento.BLOQUEADO) {
-                boton.getStyleClass().add("asiento-bloqueado");
-                boton.setDisable(true);
-            } else if (asientosSeleccionados.contains(codigo)) {
-                boton.getStyleClass().add("asiento-seleccionado");
-            }
-            boton.setOnAction(new ManejadorAsiento(codigo));
-            int columna = asientoFuncion.getAsiento().getNumero() - 1;
-            int fila = asientoFuncion.getAsiento().getFila() - 'A';
-            gridAsientos.add(boton, columna, fila);
-        }
-        if (asientosSeleccionados.isEmpty()) {
-            lblSeleccion.setText("No hay asientos seleccionados");
-        } else {
-            lblSeleccion.setText("Asientos seleccionados: " + String.join(", ", asientosSeleccionados));
-        }
-    }
-
-    private class ManejadorAsiento implements EventHandler<ActionEvent> {
-
-        private final String codigo;
-
-        ManejadorAsiento(String codigo) {
-            this.codigo = codigo;
-        }
-
-        @Override
-        public void handle(ActionEvent evento) {
-            if (asientosSeleccionados.contains(codigo)) {
-                asientosSeleccionados.remove(codigo);
-            } else {
-                asientosSeleccionados.add(codigo);
-            }
-            dibujarAsientos();
-        }
     }
 
     @FXML
     private void agregarProducto() {
         try {
-            ItemConfiteria item = cmbProductos.getValue();
-            if (item == null) {
-                mostrarError("Seleccione un producto o combo");
-                return;
-            }
-            int cantidad = (int) leerValor(txtCantidad.getText());
-            if (cantidad <= 0) {
-                mostrarError("La cantidad debe ser mayor que cero");
-                return;
-            }
-            lstCarrito.getItems().add(new LineaConfiteria(item, cantidad, chkProductoPuntos.isSelected()));
+            carrito.agregar();
         } catch (CinemaUQException e) {
             mostrarError(e.getMessage());
         }
@@ -187,45 +121,23 @@ public class ClienteControlador extends ControladorBase {
 
     @FXML
     private void quitarProducto() {
-        LineaConfiteria linea = lstCarrito.getSelectionModel().getSelectedItem();
-        if (linea != null) {
-            lstCarrito.getItems().remove(linea);
-        }
+        carrito.quitarSeleccionado();
     }
 
     @FXML
     private void limpiarCompra() {
-        asientosSeleccionados.clear();
-        lstCarrito.getItems().clear();
-        chkEntradasPuntos.setSelected(false);
-        chkGafas3D.setSelected(false);
-        chkSillaVibratoria.setSelected(false);
-        cmbPromocion.getSelectionModel().clearSelection();
-        dibujarAsientos();
+        pantallaCompra.reiniciar();
     }
 
     @FXML
     private void comprar() {
-        if (funcionSeleccionada == null) {
-            mostrarError("Primero seleccione una función de la cartelera");
-            return;
-        }
         try {
-            List<AdicionalEntrada> adicionales = new ArrayList<>();
-            if (chkGafas3D.isSelected()) {
-                adicionales.add(AdicionalEntrada.GAFAS_3D);
-            }
-            if (chkSillaVibratoria.isSelected()) {
-                adicionales.add(AdicionalEntrada.SILLA_VIBRATORIA);
-            }
-            List<LineaConfiteria> confiteria = new ArrayList<>(lstCarrito.getItems());
-            Compra compra = fachada.prepararCompra(funcionSeleccionada, asientosSeleccionados,
-                    chkEntradasPuntos.isSelected(), confiteria, cmbPromocion.getValue(), adicionales);
+            Compra compra = pantallaCompra.armarCompra();
             if (confirmar("Confirmar compra", resumenCompra(compra))) {
                 fachada.pagarCompra(compra);
                 mostrarInfo("Compra " + compra.getCodigo() + " realizada.\nValor descontado de la tarjeta: "
                         + Formatos.pesos(compra.getTotal()) + "\nPuntos ganados: " + compra.getPuntosGanados());
-                limpiarCompra();
+                pantallaCompra.reiniciar();
                 refrescarTodo();
             }
         } catch (CinemaUQException e) {
@@ -234,20 +146,20 @@ public class ClienteControlador extends ControladorBase {
     }
 
     private String resumenCompra(Compra compra) {
-        String texto = "";
+        StringBuilder texto = new StringBuilder();
         for (Entrada entrada : compra.getEntradas()) {
-            texto = texto + entrada.getDescripcion() + "   " + Formatos.pesos(entrada.getPrecio()) + "\n";
+            texto.append(entrada.getDescripcion()).append("   ").append(Formatos.pesos(entrada.getPrecio())).append("\n");
         }
         for (LineaConfiteria linea : compra.getLineasConfiteria()) {
-            texto = texto + linea + "   " + Formatos.pesos(linea.getSubtotal()) + "\n";
+            texto.append(linea).append("   ").append(Formatos.pesos(linea.getSubtotal())).append("\n");
         }
-        texto = texto + "\nSubtotal entradas: " + Formatos.pesos(compra.getSubtotalEntradas());
-        texto = texto + "\nSubtotal confitería: " + Formatos.pesos(compra.getSubtotalConfiteria());
-        texto = texto + "\nDescuento: " + Formatos.pesos(compra.getDescuento());
-        texto = texto + "\nTotal a pagar: " + Formatos.pesos(compra.getTotal());
-        texto = texto + "\nPuntos a redimir: " + compra.getPuntosRedimidos();
-        texto = texto + "\n\nSaldo actual de la tarjeta: " + Formatos.pesos(fachada.consultarTarjeta().getSaldo());
-        return texto;
+        texto.append("\nSubtotal entradas: ").append(Formatos.pesos(compra.getSubtotalEntradas()));
+        texto.append("\nSubtotal confitería: ").append(Formatos.pesos(compra.getSubtotalConfiteria()));
+        texto.append("\nDescuento: ").append(Formatos.pesos(compra.getDescuento()));
+        texto.append("\nTotal a pagar: ").append(Formatos.pesos(compra.getTotal()));
+        texto.append("\nPuntos a redimir: ").append(compra.getPuntosRedimidos());
+        texto.append("\n\nSaldo actual de la tarjeta: ").append(Formatos.pesos(fachada.consultarTarjeta().getSaldo()));
+        return texto.toString();
     }
 
     @FXML
@@ -279,7 +191,7 @@ public class ClienteControlador extends ControladorBase {
         lstDetalleCompra.getItems().add("Total pagado: " + Formatos.pesos(compra.getTotal()));
         if (compra.getReembolso() != null) {
             lstDetalleCompra.getItems().add("Reembolso: " + compra.getReembolso().getPorcentaje() + " % - "
-                    + Formatos.pesos(compra.getReembolso().getValor()));
+                    + Formatos.pesos(compra.getReembolso().getValor()) + " - " + compra.getReembolso().getMotivo());
         }
     }
 
@@ -290,8 +202,8 @@ public class ClienteControlador extends ControladorBase {
             mostrarError("Seleccione la compra que desea cancelar");
             return;
         }
-        if (!confirmar("Cancelar compra " + compra.getCodigo(),
-                "El reembolso depende del tiempo que falte para la función. ¿Desea continuar?")) {
+        if (!confirmar("Cancelar compra " + compra.getCodigo(), fachada.describirPoliticaCancelacion()
+                + "\n\n¿Desea continuar?")) {
             return;
         }
         try {
@@ -310,12 +222,7 @@ public class ClienteControlador extends ControladorBase {
     }
 
     private void refrescarTodo() {
-        lstFunciones.getItems().setAll(fachada.consultarCartelera());
-        if (funcionSeleccionada != null) {
-            lstFunciones.getSelectionModel().select(funcionSeleccionada);
-        }
-        dibujarAsientos();
-        cmbPromocion.getItems().setAll(fachada.consultarPromociones());
+        pantallaCompra.refrescarDatos();
 
         TarjetaVirtual tarjeta = fachada.consultarTarjeta();
         lblNumeroTarjeta.setText(tarjeta.getNumero());
@@ -337,6 +244,14 @@ public class ClienteControlador extends ControladorBase {
 
         int puntos = fachada.consultarPuntosDisponibles();
         lblPuntosDisponibles.setText(puntos + " puntos vigentes");
+        int porVencer = fachada.consultarPuntosPorVencer();
+        if (porVencer > 0) {
+            lblPuntosPorVencer.setText(porVencer + " puntos vencen en los próximos "
+                    + fachada.diasAlertaVencimiento() + " días. Úselos en entradas o confitería.");
+        } else {
+            lblPuntosPorVencer.setText("No tiene puntos por vencer en los próximos "
+                    + fachada.diasAlertaVencimiento() + " días.");
+        }
         lstPuntos.getItems().clear();
         for (AcumulacionPuntos lote : fachada.consultarLotesDePuntos()) {
             String estado = "vigente";
@@ -347,6 +262,8 @@ public class ClienteControlador extends ControladorBase {
                     + "   restantes: " + lote.getPuntosRestantes() + "   vence: "
                     + lote.getFechaVencimiento().format(Formatos.FECHA) + "   (" + estado + ")");
         }
+
+        lstNotificaciones.getItems().setAll(fachada.consultarNotificaciones());
 
         lblSaldoCabecera.setText("Saldo: " + Formatos.pesos(tarjeta.getSaldo()));
         lblPuntosCabecera.setText("Puntos: " + puntos);

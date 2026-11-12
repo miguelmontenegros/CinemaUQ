@@ -77,3 +77,40 @@
 .leyenda {
     -fx-padding: 3 8 3 8;
 }
+
+.resumen-compra {
+    -fx-background-color: white;
+    -fx-border-color: #c9d3e0;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 8;
+}
+
+.aviso {
+    -fx-text-fill: #8a5a00;
+}
+
+.indicador {
+    -fx-background-color: white;
+    -fx-border-color: #c9d3e0;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 8 14 8 14;
+    -fx-min-width: 130px;
+}
+
+.indicador-valor {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1f3c68;
+}
+
+.indicador-nombre {
+    -fx-text-fill: #555555;
+    -fx-font-size: 11px;
+}
+
+.texto-reporte {
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 12px;
+}
