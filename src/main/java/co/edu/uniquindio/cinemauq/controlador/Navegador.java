@@ -30,7 +30,7 @@ public class Navegador {
     }
 
     public void irAAdministrador() {
-        mostrar("admin-view.fxml", "CinemaUQ - Administrador", 1100, 720);
+        mostrar("admin-view.fxml", "CinemaUQ - Administrador", 1280, 800);
     }
 
     private void mostrar(String archivo, String titulo, double ancho, double alto) {
